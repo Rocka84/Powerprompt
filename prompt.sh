@@ -1,11 +1,24 @@
 #!/usr/bin/env bash
 
-# export PS1='$(/home/dilli/powerprompt/prompt.sh "$?")'
+# Todo:
+# - integrate gitstatus.sh
+# - git ahead/behind
+# - rename vars
+# - all icons as vars
+# - refine default colors
+# - README.md
+
+# export PS1='$('"$HOME"'/powerprompt/prompt.sh "$?")'
 
 last_command_status="$1"
 
+git_status_command="$(dirname "$0")/gitstatus.sh"
+resetColor="\E[0m"
+
 initTheme() {
-    command_color_bg="27"
+	seperator_char=""
+
+    command_color_bg="18"
     command_color_ok="46"
     command_color_fail="160"
 
@@ -19,7 +32,7 @@ initTheme() {
     branch_icon_ahead="▲"
     branch_icon_behind=" "
 
-    status_color_bg="18"
+    status_color_bg="26"
     status_color_fg="172"
     status_color_changed="178"
     status_color_staged="40"
@@ -28,78 +41,120 @@ initTheme() {
     status_color_untracked="172"
     status_color_conflicts="124"
 
-    shell_color_bg="232"
+    shell_color_bg="0"
+
+	[ "$(type -t initCustomTheme)" == "function" ] && initCustomTheme
 }
 
-initGit() {
+loadGitStatus() {
     git_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
     [ -z "$git_branch" ] && return
     local -a git_status
-    local git_status=($("$(dirname $0)/gitstatus.sh" 2>/dev/null))
-    git_staged="${git_status[4]}"
-    git_conflicts="${git_status[5]}"
-    git_changed="${git_status[6]}"
-    git_untracked="${git_status[7]}"
+    local git_status=($("$git_status_command" 2>/dev/null))
+
+    # git_branch="${git_status[0]}"
+    # git_remote="${git_status[1]}"
+    # git_upstream="${git_status[2]}"
+    git_staged="${git_status[3]}"
+    git_conflicts="${git_status[4]}"
+    git_changed="${git_status[5]}"
+    git_untracked="${git_status[6]}"
     git_stashed="${git_status[7]}"
+    # git_clean="${git_status[8]}"
 }
 
 color() {
-    echo -ne "\E[38;5;${1}m\E[48;5;${2}m"
+    echo -ne "\E[38;5;${1}m"
+    [ -n "$2" ] && echo -ne "\E[48;5;${2}m"
 }
 
-nextSegment() { # 1=oldBG, 2=newFG, 3=newBG
-    echo -n "$(color $1 $3)$(color $2 $3)"
+setColors() { # 1=newFG, 2=newBG
+    last_bg="$current_bg"
+    current_fg="$1"
+    current_bg="$2"
+}
+
+nextSegment() {
+	setColors "$1" "$2"
+    if [ -n "$last_bg" ]; then
+		add " $(color $last_bg $current_bg)${seperator_char}"
+	fi
+    add "$(color $current_fg $current_bg) "
 }
 
 add() {
     prompt="${prompt}${1}"
 }
 
+createSegmentGitBranch() {
+    [ -z "$git_branch" ] && return
 
-createGitSegment() {
-    add " $(nextSegment $pwd_color_bg $branch_color_fg $branch_color_bg) "
+    nextSegment "$branch_color_fg" "$branch_color_bg"
     add " ${git_branch}"
-
-    status=""
-    [ "$git_staged" -gt 0 ] && status="${status} \E[38;5;${status_color_staged}m ${git_staged}"
-    [ "$git_conflicts" -gt 0 ] && status="${status} \E[38;5;${status_color_conflicts}m ${git_conflicts}"
-    [ "$git_changed" -gt 0 ] && status="${status} \E[38;5;${status_color_changed}m ${git_changed}"
-    [ "$git_untracked" -gt 0 ] && status="${status} \E[38;5;${status_color_untracked}m ${git_untracked}"
-    [ "$git_stashed" -gt 0 ] && status="${status} \E[38;5;${status_color_stashed}m ${git_stashed}"
-
-    if [ -z "$status" ]; then
-        add " $(nextSegment $branch_color_bg $shell_color_bg $shell_color_bg) "
-        return
-    fi
-
-    add " $(nextSegment $branch_color_bg $status_color_fg $status_color_bg)"
-    add "$status"
-    add " $(nextSegment $status_color_bg $shell_color_bg $shell_color_bg) "
 }
 
+createSegmentGitStatus() {
+    [ -z "$git_branch" ] && return
 
-resetColor="\E[0m"
+    status=""
+    [ "$git_staged" -gt 0 ] &&    status="${status}$(color $status_color_staged) ${git_staged} "
+    [ "$git_conflicts" -gt 0 ] && status="${status}$(color $status_color_conflicts) ${git_conflicts} "
+    [ "$git_changed" -gt 0 ] &&   status="${status}$(color $status_color_changed) ${git_changed} "
+    [ "$git_untracked" -gt 0 ] && status="${status}$(color $status_color_untracked) ${git_untracked} "
+    [ "$git_stashed" -gt 0 ] &&   status="${status}$(color $status_color_stashed) ${git_stashed} "
+
+    [ -z "$status" ] && return
+
+    nextSegment  "$status_color_fg" "$status_color_bg" 
+    add "${status}\b"
+}
+
+createSegmentLastCommand() {
+    nextSegment "$command_color_ok" "$command_color_bg"
+    if [ "$last_command_status" == "0" ]; then
+        add "$(color $current_fg)✔"
+    else
+        add "$(color $command_color_fail)✘ $last_command_status"
+    fi
+}
+
+createSegmentPwd() {
+    nextSegment "$pwd_color_fg" "$pwd_color_bg"
+
+    pwd="$(pwd)"
+    add "${pwd//$HOME/\~}"
+}
+
+# example
+createSegmentExample() {
+    nextSegment "18" "172"
+    add "$($HOME/scripts/todo.sh)"
+}
+
+createSegments() {
+	createSegmentLastCommand
+	# createSegmentExample
+	createSegmentPwd
+	createSegmentGitBranch
+	createSegmentGitStatus
+
+	# no custom method for now, just override the whole function...
+	# [ "$(type -t initCustomSegments)" == "function" ] && initCustomSegments
+}
+
+[ -f "$HOME/.powerprompt.sh" ] && source "$HOME/.powerprompt.sh" 
 
 initTheme
-initGit
+loadGitStatus
 
-if [ "$last_command_status" == "0" ]; then
-    add "$(color $command_color_ok $command_color_bg) ✔"
-else
-    add "$(color $command_color_fail $command_color_bg) ✘ $last_command_status"
-fi
+createSegments
 
-add " $(nextSegment $command_color_bg $pwd_color_fg $pwd_color_bg) "
+# end of powerline (last segment)
+nextSegment "$shell_color_bg" "$shell_color_bg"
 
-pwd="$(pwd)"
-add "${pwd//$HOME/\~}"
-
-if [ -z "$git_branch" ]; then
-    add " $(nextSegment $pwd_color_bg $shell_color_bg $shell_color_bg) "
-else
-    createGitSegment
-fi
-
-add "${resetColor}\n⟫ "
+# the actual prompt on a new line
+add "${resetColor}\n"
+[ "$UID" == "0" ] && add "# " || add "⟫ "
 
 echo -e "$prompt"
+exit "$last_command_status"
