@@ -61,6 +61,8 @@ loadGitStatus() {
     git_untracked="${git_status[6]}"
     git_stashed="${git_status[7]}"
     # git_clean="${git_status[8]}"
+    git_behind="${git_status[9]}"
+    git_ahead="${git_status[10]}"
 }
 
 color() {
@@ -91,6 +93,8 @@ createSegmentGitBranch() {
 
     nextSegment "$branch_color_fg" "$branch_color_bg"
     add " ${git_branch}"
+    [ "$git_behind" -gt 0 ] && add " $(color $branch_color_behind) $git_behind"
+    [ "$git_ahead" -gt 0 ] && add " $(color $branch_color_ahead)▲$git_ahead"
 }
 
 createSegmentGitStatus() {

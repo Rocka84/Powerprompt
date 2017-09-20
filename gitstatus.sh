@@ -111,7 +111,7 @@ if [[ -z "$upstream" ]] ; then
   upstream='^'
 fi
 
-printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
+printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
   "$branch" \
   "$remote" \
   "$upstream" \
@@ -120,6 +120,8 @@ printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
   $num_changed \
   $num_untracked \
   $num_stashed \
-  $clean
+  $clean \
+  ${num_behind:-0} \
+  ${num_ahead:-0}
 
 exit
