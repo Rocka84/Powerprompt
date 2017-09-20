@@ -23,10 +23,10 @@ git_ahead=0
 loadGitStatus() {
     local show_untracked="${1:-"no"}"
     [ -n "$__GIT_PROMPT_SHOW_UNTRACKED_FILES" ] && show_untracked="$__GIT_PROMPT_SHOW_UNTRACKED_FILES"
-    local gitstatus=$( LC_ALL=C git status --untracked-files=$show_untracked --porcelain --branch )
-
-    # if the status is fatal, exit now
-    [[ "$?" -ne 0 ]] && exit 0
+    local gitstatus=$( LC_ALL=C git status --untracked-files=$show_untracked --porcelain --branch 2>/dev/null)
+    
+    # if the status is empty, return now
+    [ -z "$gitstatus" ] && return 1
 
     while IFS='' read -r line || [[ -n "$line" ]]; do
     local status=${line:0:2}
@@ -53,7 +53,7 @@ loadGitStatus() {
     done <<< "$gitstatus"
 
     if [[ "$__GIT_PROMPT_IGNORE_STASH" != "1" ]]; then
-    local stash_file="$( git rev-parse --git-dir )/logs/refs/stash"
+    local stash_file="$( git rev-parse --git-dir 2>/dev/null)/logs/refs/stash"
     if [[ -e "${stash_file}" ]]; then
         while IFS='' read -r wcline || [[ -n "$wcline" ]]; do
         ((git_stashed++))
@@ -114,7 +114,7 @@ loadGitStatus() {
 }
 
 if [ -z "$__git_ststus_script_was_sourced" ]; then
-    loadGitStatus $*
+    loadGitStatus $* || exit 1
     printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
         "$git_branch" \
         "$git_remote" \
