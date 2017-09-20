@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Todo:
-# - integrate gitstatus.sh
+# - integrate/source gitstatus.sh
 # - git ahead/behind
 # - rename vars
 # - all icons as vars
@@ -135,30 +135,30 @@ createSegmentExample() {
     add "$($HOME/scripts/todo.sh)"
 }
 
+createSegmentPrompt() {
+	nextSegment "$shell_color_bg" "$shell_color_bg"
+
+	add "${resetColor}\n"
+	[ "$UID" == "0" ] && add "# " || add "⟫ "
+}
+
 createSegments() {
 	createSegmentLastCommand
 	# createSegmentExample
 	createSegmentPwd
 	createSegmentGitBranch
 	createSegmentGitStatus
+	createSegmentPrompt
 
 	# no custom method for now, just override the whole function...
 	# [ "$(type -t initCustomSegments)" == "function" ] && initCustomSegments
 }
 
+initTheme
 [ -f "$HOME/.powerprompt.sh" ] && source "$HOME/.powerprompt.sh" 
 
-initTheme
 loadGitStatus
-
 createSegments
-
-# end of powerline (last segment)
-nextSegment "$shell_color_bg" "$shell_color_bg"
-
-# the actual prompt on a new line
-add "${resetColor}\n"
-[ "$UID" == "0" ] && add "# " || add "⟫ "
-
 echo -e "$prompt"
+
 exit "$last_command_status"
