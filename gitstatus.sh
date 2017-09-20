@@ -4,124 +4,128 @@
 # Functionally equivalent to 'gitstatus.py', but written in bash (not python).
 #
 # Alan K. Stebbens <aks@stebbens.org> [http://github.com/aks]
+# Made sourceable by F. Dillmeier <f.dillmeier@gmail.com> for powerprompt
 
-if [ -z "${__GIT_PROMPT_DIR}" ]; then
-  SOURCE="${BASH_SOURCE[0]}"
-  while [ -h "${SOURCE}" ]; do
-    DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
-    SOURCE="$(readlink "${SOURCE}")"
-    [[ $SOURCE != /* ]] && SOURCE="${DIR}/${SOURCE}"
-  done
-  __GIT_PROMPT_DIR="$( cd -P "$( dirname "${SOURCE}" )" && pwd )"
-fi
+[ "$0" != "$BASH_SOURCE" ] && __git_ststus_script_was_sourced="1"
 
-gitstatus=$( LC_ALL=C git status --untracked-files=${__GIT_PROMPT_SHOW_UNTRACKED_FILES:-all} --porcelain --branch )
+git_branch=""
+git_remote=""
+git_upstream=""
+git_staged=0
+git_conflicts=0
+git_changed=0
+git_untracked=0
+git_stashed=0
+git_clean=0
+git_behind=0
+git_ahead=0
 
-# if the status is fatal, exit now
-[[ "$?" -ne 0 ]] && exit 0
+loadGitStatus() {
+    local show_untracked="${1:-"no"}"
+    [ -n "$__GIT_PROMPT_SHOW_UNTRACKED_FILES" ] && show_untracked="$__GIT_PROMPT_SHOW_UNTRACKED_FILES"
+    local gitstatus=$( LC_ALL=C git status --untracked-files=$show_untracked --porcelain --branch )
 
-num_staged=0
-num_changed=0
-num_conflicts=0
-num_untracked=0
-while IFS='' read -r line || [[ -n "$line" ]]; do
-  status=${line:0:2}
-  while [[ -n $status ]]; do
-    case "$status" in
-      #two fixed character matches, loop finished
-      \#\#) branch_line="${line/\.\.\./^}"; break ;;
-      \?\?) ((num_untracked++)); break ;;
-      U?) ((num_conflicts++)); break;;
-      ?U) ((num_conflicts++)); break;;
-      DD) ((num_conflicts++)); break;;
-      AA) ((num_conflicts++)); break;;
-      #two character matches, first loop
-      ?M) ((num_changed++)) ;;
-      ?D) ((num_changed++)) ;;
-      ?\ ) ;;
-      #single character matches, second loop
-      U) ((num_conflicts++)) ;;
-      \ ) ;;
-      *) ((num_staged++)) ;;
-    esac
-    status=${status:0:(${#status}-1)}
-  done
-done <<< "$gitstatus"
+    # if the status is fatal, exit now
+    [[ "$?" -ne 0 ]] && exit 0
 
-num_stashed=0
-if [[ "$__GIT_PROMPT_IGNORE_STASH" != "1" ]]; then
-  stash_file="$( git rev-parse --git-dir )/logs/refs/stash"
-  if [[ -e "${stash_file}" ]]; then
-    while IFS='' read -r wcline || [[ -n "$wcline" ]]; do
-      ((num_stashed++))
-    done < ${stash_file}
-  fi
-fi
-
-clean=0
-if (( num_changed == 0 && num_staged == 0 && num_untracked == 0 && num_stashed == 0 && num_conflicts == 0)) ; then
-  clean=1
-fi
-
-IFS="^" read -ra branch_fields <<< "${branch_line/\#\# }"
-branch="${branch_fields[0]}"
-remote=
-upstream=
-
-if [[ "$branch" == *"Initial commit on"* ]]; then
-  IFS=" " read -ra fields <<< "$branch"
-  branch="${fields[3]}"
-  remote="_NO_REMOTE_TRACKING_"
-elif [[ "$branch" == *"No commits yet on"* ]]; then
-  IFS=" " read -ra fields <<< "$branch"
-  branch="${fields[4]}"
-  remote="_NO_REMOTE_TRACKING_"
-elif [[ "$branch" == *"no branch"* ]]; then
-  tag=$( git describe --tags --exact-match )
-  if [[ -n "$tag" ]]; then
-    branch="$tag"
-  else
-    branch="_PREHASH_$( git rev-parse --short HEAD )"
-  fi
-else
-  if [[ "${#branch_fields[@]}" -eq 1 ]]; then
-    remote="_NO_REMOTE_TRACKING_"
-  else
-    IFS="[,]" read -ra remote_fields <<< "${branch_fields[1]}"
-    upstream="${remote_fields[0]}"
-    for remote_field in "${remote_fields[@]}"; do
-      if [[ "$remote_field" == "ahead "* ]]; then
-        num_ahead=${remote_field:6}
-        ahead="_AHEAD_${num_ahead}"
-      fi
-      if [[ "$remote_field" == "behind "* ]] || [[ "$remote_field" == " behind "* ]]; then
-        num_behind=${remote_field:7}
-        behind="_BEHIND_${num_behind# }"
-      fi
+    while IFS='' read -r line || [[ -n "$line" ]]; do
+    local status=${line:0:2}
+    while [[ -n $status ]]; do
+        case "$status" in
+        #two fixed character matches, loop finished
+        \#\#) branch_line="${line/\.\.\./^}"; break ;;
+        \?\?) ((git_untracked++)); break ;;
+        U?) ((git_conflicts++)); break;;
+        ?U) ((git_conflicts++)); break;;
+        DD) ((git_conflicts++)); break;;
+        AA) ((git_conflicts++)); break;;
+        #two character matches, first loop
+        ?M) ((git_changed++)) ;;
+        ?D) ((git_changed++)) ;;
+        ?\ ) ;;
+        #single character matches, second loop
+        U) ((git_conflicts++)) ;;
+        \ ) ;;
+        *) ((git_staged++)) ;;
+        esac
+        status=${status:0:(${#status}-1)}
     done
-    remote="${behind}${ahead}"
-  fi
+    done <<< "$gitstatus"
+
+    if [[ "$__GIT_PROMPT_IGNORE_STASH" != "1" ]]; then
+    local stash_file="$( git rev-parse --git-dir )/logs/refs/stash"
+    if [[ -e "${stash_file}" ]]; then
+        while IFS='' read -r wcline || [[ -n "$wcline" ]]; do
+        ((git_stashed++))
+        done < ${stash_file}
+    fi
+    fi
+
+    if (( git_changed == 0 && git_staged == 0 && git_untracked == 0 && git_stashed == 0 && git_conflicts == 0)) ; then
+        git_clean=1
+    fi
+
+    IFS="^" read -ra branch_fields <<< "${branch_line/\#\# }"
+    git_branch="${branch_fields[0]}"
+
+    if [[ "$git_branch" == *"Initial commit on"* ]]; then
+    IFS=" " read -ra fields <<< "$git_branch"
+    git_branch="${fields[3]}"
+    git_remote="_NO_REMOTE_TRACKING_"
+    elif [[ "$git_branch" == *"No commits yet on"* ]]; then
+    IFS=" " read -ra fields <<< "$git_branch"
+    git_branch="${fields[4]}"
+    git_remote="_NO_REMOTE_TRACKING_"
+    elif [[ "$git_branch" == *"no branch"* ]]; then
+    local tag=$( git describe --tags --exact-match )
+    if [[ -n "$tag" ]]; then
+        git_branch="$tag"
+    else
+        git_branch="_PREHASH_$( git rev-parse --short HEAD )"
+    fi
+    else
+    if [[ "${#branch_fields[@]}" -eq 1 ]]; then
+        git_remote="_NO_REMOTE_TRACKING_"
+    else
+        IFS="[,]" read -ra remote_fields <<< "${branch_fields[1]}"
+        git_upstream="${remote_fields[0]}"
+        for remote_field in "${remote_fields[@]}"; do
+        if [[ "$remote_field" == "ahead "* ]]; then
+            git_ahead=${remote_field:6}
+            local ahead="_AHEAD_${git_ahead}"
+        fi
+        if [[ "$remote_field" == "behind "* ]] || [[ "$remote_field" == " behind "* ]]; then
+            git_behind=${remote_field:7}
+            local behind="_BEHIND_${git_behind# }"
+        fi
+        done
+        git_remote="${behind}${ahead}"
+    fi
+    fi
+
+    if [[ -z "$git_remote" ]] ; then
+    git_remote='.'
+    fi
+
+    if [[ -z "$git_upstream" ]] ; then
+    git_upstream='^'
+    fi
+
+}
+
+if [ -z "$__git_ststus_script_was_sourced" ]; then
+    loadGitStatus $*
+    printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
+        "$git_branch" \
+        "$git_remote" \
+        "$git_upstream" \
+        "$git_staged" \
+        "$git_conflicts" \
+        "$git_changed" \
+        "$git_untracked" \
+        "$git_stashed" \
+        "$git_clean" \
+        "$git_behind" \
+        "$git_ahead"
+    exit
 fi
-
-if [[ -z "$remote" ]] ; then
-  remote='.'
-fi
-
-if [[ -z "$upstream" ]] ; then
-  upstream='^'
-fi
-
-printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
-  "$branch" \
-  "$remote" \
-  "$upstream" \
-  $num_staged \
-  $num_conflicts \
-  $num_changed \
-  $num_untracked \
-  $num_stashed \
-  $clean \
-  ${num_behind:-0} \
-  ${num_ahead:-0}
-
-exit

@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 # Todo:
-# - integrate/source gitstatus.sh
-# - git ahead/behind
 # - rename vars
 # - all icons as vars
 # - refine default colors
@@ -12,7 +10,7 @@
 
 last_command_status="$1"
 
-git_status_command="$(dirname "$0")/gitstatus.sh"
+source "$(dirname "$0")/gitstatus.sh"
 resetColor="\E[0m"
 
 initTheme() {
@@ -42,27 +40,6 @@ initTheme() {
     status_color_conflicts="124"
 
     shell_color_bg="0"
-
-	[ "$(type -t initCustomTheme)" == "function" ] && initCustomTheme
-}
-
-loadGitStatus() {
-    git_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
-    [ -z "$git_branch" ] && return
-    local -a git_status
-    local git_status=($("$git_status_command" 2>/dev/null))
-
-    # git_branch="${git_status[0]}"
-    # git_remote="${git_status[1]}"
-    # git_upstream="${git_status[2]}"
-    git_staged="${git_status[3]}"
-    git_conflicts="${git_status[4]}"
-    git_changed="${git_status[5]}"
-    git_untracked="${git_status[6]}"
-    git_stashed="${git_status[7]}"
-    # git_clean="${git_status[8]}"
-    git_behind="${git_status[9]}"
-    git_ahead="${git_status[10]}"
 }
 
 color() {
@@ -149,9 +126,6 @@ createSegments() {
 	createSegmentGitBranch
 	createSegmentGitStatus
 	createSegmentPrompt
-
-	# no custom method for now, just override the whole function...
-	# [ "$(type -t initCustomSegments)" == "function" ] && initCustomSegments
 }
 
 initTheme
