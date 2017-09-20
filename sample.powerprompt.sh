@@ -1,7 +1,7 @@
-# initCustomTheme() {
-# 	seperator_char="❱"
-# }
+# you may override all vars and functions
+# seperator_char="❱"
 
+# and/or create new segments
 userAndHostname() {
 	# first start a new segment with a
 	# foreground and a background color
@@ -17,11 +17,16 @@ myCustomTimeAddon() {
 	add " $(color "15")$(date +%H:%M:%S)"
 }
 
+# You can override this function to add
+# or rearrange segments. This example
+# shows the available segments and their
+# default order.
 createSegments() {
 	createSegmentLastCommand
-	myCustomTimeAddon
-	userAndHostname
+	# createSegmentExample
 	createSegmentPwd
 	createSegmentGitBranch
 	createSegmentGitStatus
+	createSegmentPrompt
 }
+
