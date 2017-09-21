@@ -1,29 +1,35 @@
 # you may override all vars and functions
-# seperator_char="❱"
 
-# and/or create new segments
+# separator_char="❱"
+branch_color_bg="119"
+
+# and create new segments
 userAndHostname() {
 	# first start a new segment with a
 	# foreground and a background color
 	nextSegment "0" "112"
 
-	# then add elements to it
+	# then add elements to the prompt
 	add "${USER}@${HOSTNAME}"
 }
 
 myCustomTimeAddon() {
 	# skip the call to nextSegment to
-	# create an addon to the last segment
+	# create an addon to the segment before
 	add " $(color "15")$(date +%H:%M:%S)"
 }
 
-# You can override this function to add
-# or rearrange segments. This example
+# You can override `createSegments` to add
+# and/or rearrange segments. This example
 # shows the available segments and their
-# default order.
+# default order, plus the two custom
+# segments defined here.
 createSegments() {
 	createSegmentLastCommand
-	# createSegmentExample
+	#custom
+	myCustomTimeAddon
+	#custom
+	userAndHostname
 	createSegmentPwd
 	createSegmentGitBranch
 	createSegmentGitStatus
