@@ -106,12 +106,6 @@ createSegmentPwd() {
     add "${pwd//$HOME/\~}"
 }
 
-# example
-createSegmentExample() {
-    nextSegment "18" "172"
-    add "$($HOME/scripts/todo.sh)"
-}
-
 createSegmentPrompt() {
 	nextSegment "$shell_color_bg" "$shell_color_bg"
 
@@ -121,7 +115,6 @@ createSegmentPrompt() {
 
 createSegments() {
 	createSegmentLastCommand
-	# createSegmentExample
 	createSegmentPwd
 	createSegmentGitBranch
 	createSegmentGitStatus
