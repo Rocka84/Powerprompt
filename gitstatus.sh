@@ -6,7 +6,7 @@
 # Alan K. Stebbens <aks@stebbens.org> [http://github.com/aks]
 # Made sourceable by F. Dillmeier <f.dillmeier@gmail.com> for powerprompt
 
-[ "$0" != "$BASH_SOURCE" ] && __git_ststus_script_was_sourced="1"
+[ "$0" != "$BASH_SOURCE" ] && __git_status_script_was_sourced="1"
 
 git_branch=""
 git_remote=""
@@ -113,7 +113,10 @@ loadGitStatus() {
 
 }
 
-if [ -z "$__git_ststus_script_was_sourced" ]; then
+if [ -z "$__git_status_script_was_sourced" ]; then
+	# if this script is run by itsself
+	# call that function immediatly and
+	# print the results
     loadGitStatus $* || exit 1
     printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
         "$git_branch" \
