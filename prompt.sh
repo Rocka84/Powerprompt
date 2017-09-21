@@ -131,7 +131,7 @@ createSegments() {
 initTheme
 [ -f "$HOME/.powerprompt.sh" ] && source "$HOME/.powerprompt.sh" 
 
-loadGitStatus
+loadGitStatus "all"
 createSegments
 echo -e "$prompt"
 
