@@ -1,4 +1,5 @@
-# you may override all vars and functions
+# Copy this file to ~/.powerprompt.sh and you may
+# override all vars and functions of powerprompt
 
 # separator_char="❱"
 branch_color_bg="119"
