@@ -2,6 +2,8 @@
 
 A simple powerline-like prompt for bash.
 
+![screenshot](https://user-images.githubusercontent.com/2353088/30746888-a5495406-9fab-11e7-81d8-f1ab0feb2d25.png)
+
 ## Usage
 
 * install [Powerline fonts](https://github.com/powerline/fonts)
