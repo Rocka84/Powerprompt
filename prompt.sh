@@ -113,9 +113,9 @@ createSegmentGitStatus() {
 createSegmentLastCommand() {
     nextSegment "$command_color_ok" "$command_color_bg"
     if [ "$last_command_status" == "0" ]; then
-        add "$(color $current_fg)$command_icon_fail"
+        add "$command_icon_ok"
     else
-        add "$(color $command_color_fail)$command_icon_ok $last_command_status"
+        add "$(color $command_color_fail)$command_icon_fail $last_command_status"
     fi
 }
 
