@@ -11,7 +11,7 @@ source "$(dirname "$0")/gitstatus.sh"
 resetColor="\E[0m"
 
 initTheme() {
-	separator_char=""
+    separator_char=""
 
 
     command_icon_ok="✔"
@@ -39,9 +39,9 @@ initTheme() {
     status_color_bg="26"
     status_color_fg="172"
 
-	status_icon_changed=" "
+    status_icon_changed=" "
     status_color_changed="178"
-	
+
     status_icon_staged=" "
     status_color_staged="40"
 
@@ -74,10 +74,10 @@ setColors() { # 1=newFG, 2=newBG
 }
 
 nextSegment() {
-	setColors "$1" "$2"
+    setColors "$1" "$2"
     if [ -n "$last_bg" ]; then
-		add " $(color $last_bg $current_bg)${separator_char}"
-	fi
+        add " $(color $last_bg $current_bg)${separator_char}"
+    fi
     add "$(color $current_fg $current_bg) "
 }
 
@@ -100,7 +100,7 @@ createSegmentGitStatus() {
     status=""
     [ "$git_staged" -gt 0 ] &&    status="${status}$(color $status_color_staged)${status_icon_staged}${git_staged} "
     [ "$git_conflicts" -gt 0 ] && status="${status}$(color $status_color_conflicts)${status_icon_conflicts}${git_conflicts} "
-	[ "$git_changed" -gt 0 ] &&   status="${status}$(color $status_color_changed)${status_icon_changed}${git_changed} "
+    [ "$git_changed" -gt 0 ] &&   status="${status}$(color $status_color_changed)${status_icon_changed}${git_changed} "
     [ "$git_untracked" -gt 0 ] && status="${status}$(color $status_color_untracked)${status_icon_untracked}${git_untracked} "
     [ "$git_stashed" -gt 0 ] &&   status="${status}$(color $status_color_stashed)${status_icon_stashed}${git_stashed} "
 
@@ -127,18 +127,18 @@ createSegmentPwd() {
 }
 
 createSegmentPrompt() {
-	nextSegment "$shell_color_bg" "$shell_color_bg"
+    nextSegment "$shell_color_bg" "$shell_color_bg"
 
-	add "${resetColor}\n"
-	[ "$UID" == "0" ] && add "# " || add "⟫ "
+    add "${resetColor}\n"
+    [ "$UID" == "0" ] && add "# " || add "⟫ "
 }
 
 createSegments() {
-	createSegmentLastCommand
-	createSegmentPwd
-	createSegmentGitBranch
-	createSegmentGitStatus
-	createSegmentPrompt
+    createSegmentLastCommand
+    createSegmentPwd
+    createSegmentGitBranch
+    createSegmentGitStatus
+    createSegmentPrompt
 }
 
 initTheme
