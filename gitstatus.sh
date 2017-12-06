@@ -21,15 +21,27 @@ git_behind=0
 git_ahead=0
 
 loadGitStatus() {
-    local show_untracked="${1:-"no"}"
-    [ -n "$__GIT_PROMPT_SHOW_UNTRACKED_FILES" ] && show_untracked="$__GIT_PROMPT_SHOW_UNTRACKED_FILES"
-    local gitstatus=$( LC_ALL=C git status --untracked-files=$show_untracked --porcelain --branch 2>/dev/null)
-    
+    local show_untracked
+    local gitstatus
+    local status
+    local stash_file
+    local tag
+    local ahead
+    local behind
+
+    [ -n "$1" ] && show_untracked="$1" || show_untracked="${__GIT_PROMPT_SHOW_UNTRACKED_FILES:-"no"}"
+    gitstatus=$( LC_ALL=C timeout -k 5s 3s git status --untracked-files="$show_untracked" --porcelain --branch 2>/dev/null)
+
+    if [ "$?" == 124 ]; then
+        git_branch="???"
+        return 1
+    fi
+
     # if the status is empty, return now
     [ -z "$gitstatus" ] && return 1
 
     while IFS='' read -r line || [[ -n "$line" ]]; do
-    local status=${line:0:2}
+    status=${line:0:2}
     while [[ -n $status ]]; do
         case "$status" in
         #two fixed character matches, loop finished
@@ -53,7 +65,7 @@ loadGitStatus() {
     done <<< "$gitstatus"
 
     if [[ "$__GIT_PROMPT_IGNORE_STASH" != "1" ]]; then
-    local stash_file="$( git rev-parse --git-dir 2>/dev/null)/logs/refs/stash"
+    stash_file="$( git rev-parse --git-dir 2>/dev/null)/logs/refs/stash"
     if [[ -e "${stash_file}" ]]; then
         while IFS='' read -r wcline || [[ -n "$wcline" ]]; do
         ((git_stashed++))
@@ -77,7 +89,7 @@ loadGitStatus() {
     git_branch="${fields[4]}"
     git_remote="_NO_REMOTE_TRACKING_"
     elif [[ "$git_branch" == *"no branch"* ]]; then
-    local tag=$( git describe --tags --exact-match )
+    tag=$( git describe --tags --exact-match )
     if [[ -n "$tag" ]]; then
         git_branch="$tag"
     else
@@ -92,11 +104,11 @@ loadGitStatus() {
         for remote_field in "${remote_fields[@]}"; do
         if [[ "$remote_field" == "ahead "* ]]; then
             git_ahead=${remote_field:6}
-            local ahead="_AHEAD_${git_ahead}"
+            ahead="_AHEAD_${git_ahead}"
         fi
         if [[ "$remote_field" == "behind "* ]] || [[ "$remote_field" == " behind "* ]]; then
             git_behind=${remote_field:7}
-            local behind="_BEHIND_${git_behind# }"
+            behind="_BEHIND_${git_behind# }"
         fi
         done
         git_remote="${behind}${ahead}"
@@ -117,7 +129,7 @@ if [ -z "$__git_status_script_was_sourced" ]; then
 	# if this script is run by itsself
 	# call that function immediatly and
 	# print the results
-    loadGitStatus $* || exit 1
+    loadGitStatus "$@" || exit 1
     printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
         "$git_branch" \
         "$git_remote" \
