@@ -30,7 +30,7 @@ loadGitStatus() {
     local behind
 
     [ -n "$1" ] && show_untracked="$1" || show_untracked="${__GIT_PROMPT_SHOW_UNTRACKED_FILES:-"no"}"
-    gitstatus=$( LC_ALL=C timeout -k 5s 3s git status --untracked-files="$show_untracked" --porcelain --branch 2>/dev/null)
+    gitstatus=$( LC_ALL=C timeout -k 9s 7s git status --untracked-files="$show_untracked" --porcelain --branch 2>/dev/null)
 
     if [ "$?" == 124 ]; then
         git_branch="???"
