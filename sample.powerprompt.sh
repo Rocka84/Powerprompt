@@ -20,11 +20,19 @@ myCustomTimeAddon() {
 	add " $(color "15")$(date +%H:%M:%S)"
 }
 
+# You may also override builtin segments
+createSegmentPrompt() {
+    nextSegment "$shell_color_bg" "$shell_color_bg"
+
+    add "${resetColor}\n"
+    [ "$UID" == "0" ] && add "# " || add "⟫ "
+}
+
 # You can override `createSegments` to add
 # and/or rearrange segments. This example
 # shows the available segments and their
-# default order, plus the two custom
-# segments defined here.
+# default order plus the two custom
+# segments defined above.
 createSegments() {
 	createSegmentLastCommand
 	#custom
