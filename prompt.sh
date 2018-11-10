@@ -25,7 +25,7 @@ initTheme() {
     pwd_color_bg="25"
     pwd_color_fg="250"
 
-    branch_icon=""
+    branch_icon=""
     branch_color_bg="19"
     branch_color_fg="248"
 
