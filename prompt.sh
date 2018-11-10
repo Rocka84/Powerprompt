@@ -14,8 +14,8 @@ initTheme() {
     separator_char=""
 
 
-    command_icon_ok="✔"
-    command_icon_fail="✘"
+    command_icon_ok=""
+    command_icon_fail=""
 
     command_color_bg="18"
     command_color_ok="46"
@@ -29,30 +29,26 @@ initTheme() {
     branch_color_bg="19"
     branch_color_fg="248"
 
-    branch_icon_ahead="▲"
+    branch_icon_ahead=" "
     branch_color_ahead="252"
 
-    branch_icon_behind=" "
+    branch_icon_behind=" "
     branch_color_behind="202"
 
 
     status_color_bg="26"
     status_color_fg="172"
 
-    status_icon_changed=" "
+    status_icon_changed=" "
     status_color_changed="178"
 
-    status_icon_staged=" "
+    status_icon_staged=" "
     status_color_staged="40"
 
-    status_icon_stashed=" "
+    status_icon_stashed=" "
     status_color_stashed="219"
 
-    status_icon_clean="$command_icon_ok"
-    status_icon_not_clean="$command_icon_fail"
-    status_color_clean="46"
-
-    status_icon_untracked=" "
+    status_icon_untracked=" "
     status_color_untracked="172"
 
     status_icon_conflicts=" "
