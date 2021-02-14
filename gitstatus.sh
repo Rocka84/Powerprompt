@@ -22,7 +22,7 @@ git_ahead=0
 
 timeoutCommand() {
     if [ -n "$BUSYBOX" ]; then
-        LC_ALL=C timeout -s SIGKILL -t 7 "$@"
+        LC_ALL=C timeout -s SIGKILL 7 "$@"
     else
         LC_ALL=C timeout -k 9s 7s "$@"
     fi
