@@ -126,7 +126,7 @@ createSegmentPrompt() {
     nextSegment "$shell_color_bg" "$shell_color_bg"
 
     add "${resetColor}\n"
-    [ "$UID" == "0" ] && add ":!" || add ":"
+    [ "$UID" == "0" ] && add "!:" || add ":"
 }
 
 createSegments() {
